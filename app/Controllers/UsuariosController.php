@@ -15,11 +15,12 @@ class UsuariosController
 
     public function listar(): void
     {
+        exigirAutenticacao();
         //Define a saída em JSON para APIs/consumo por front-end.
         header('Content-Type: application/json; charset=utf-8');
 
         //Consulta todos os usuários com ordenação decrescente por ID.
-        $sql = 'SELECT id, nome, email, perfil, status, criado_em
+        $sql = 'SELECT id, nome, email, perfil, status, criado_em, atualizado_em
                 FROM usuarios
                 ORDER BY id DESC';
 
@@ -31,6 +32,7 @@ class UsuariosController
 
     public function buscarPorId(): void 
     {
+        exigirAutenticacao();
         header ('Content-Type: application/json; charset=utf-8');
 
         //Lê e valida o ID recebido por GET.
@@ -43,7 +45,7 @@ class UsuariosController
         }
 
         //Consulta parametrizada evita SQL Injection.
-        $sql = 'SELECT id, nome, email, perfil, status, criado_em
+        $sql = 'SELECT id, nome, email, perfil, status, criado_em, atualizado_em
                 FROM usuarios
                 WHERE id = :id';
 
@@ -64,6 +66,7 @@ class UsuariosController
 
     public function criar(): void 
     {
+        exigirAutenticacao();
         header('Content-Type: application/json; charset=utf-8');
 
         //Coleta dados do formulário (POST).
@@ -83,6 +86,12 @@ class UsuariosController
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
             http_response_code(400);
             echo json_encode(['erro' => 'E-mail inválido.']);
+            return;
+        }
+
+        if (strlen($senha) < 6) {
+            http_response_code(400);
+            echo json_encode(['erro' => 'Senha deve ter no mínimo 6 caracteres.']);
             return;
         }
 
@@ -126,6 +135,7 @@ class UsuariosController
 
     public function atualizar(): void
     {
+        exigirAutenticacao();
         header('Content-Type: application/json; charset=utf-8');
 
         // ID vem no POST para operação de update.
@@ -184,6 +194,7 @@ class UsuariosController
 
     public function excluir(): void
     {
+        exigirAutenticacao();
         header('Content-Type: application/json; charset=utf-8');
 
         // Exclusão por ID recebido no corpo da requisição.
