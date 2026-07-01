@@ -1,247 +1,398 @@
-<?php require_once __DIR__ . '/../layouts/config-view.php'; ?>
-<!doctype html>
-<html lang="pt-br">
+<?php
+$tituloPagina = 'Atendimentos';
+require __DIR__ . '/../layouts/header.php';
+?>
 
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-
-    <title>Atendimentos - AtendeLab</title>
-
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-
-<body class="bg-light">
-
-    <nav class="navbar navbar-dark bg-dark">
-        <div class="container">
-            <span class="navbar-brand">AtendeLab</span>
-
-            <div>
-                <a class="btn btn-outline-light btn-sm" href="<?= $baseUrl ?>?controller=auth&action=dashboard">
-                    Dashboard
-                </a>
-                <a class="btn btn-outline-light btn-sm" href="<?= $baseUrl ?>?controller=auth&action=logout">
-                    Sair
-                </a>
-            </div>
-        </div>
-    </nav>
-
-    <div class="container mt-4">
-
-        <div id="alerta"></div>
-
-        <div class="card shadow-sm mb-4">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h1 class="h4 mb-0">Atendimentos</h1>
-                    <button class="btn btn-success" onclick="abrirFormularioNovo()">
-                        Novo atendimento
-                    </button>
-                </div>
-
-                <div class="table-responsive">
-                    <table class="table table-striped align-middle">
-                        <thead>
-                            <tr>
-                                <th>Pessoa</th>
-                                <th>Tipo</th>
-                                <th>Data</th>
-                                <th>Descrição</th>
-                                <th>Status</th>
-                                <th class="text-end">Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tabelaAtendimentos">
-                            <tr>
-                                <td colspan="6" class="text-center py-4">Carregando...</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
-        <div class="card shadow-sm mb-4" id="cardFormulario" style="display: none;">
-            <div class="card-body">
-                <h2 class="h5 mb-3">Novo atendimento</h2>
-
-                <form id="formAtendimento">
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="pessoa_id" class="form-label">Pessoa</label>
-                            <select class="form-select" id="pessoa_id" name="pessoa_id" required>
-                                <option value="">Selecione...</option>
-                            </select>
-                        </div>
-
-                        <div class="col-md-6 mb-3">
-                            <label for="tipo_atendimento_id" class="form-label">Tipo de atendimento</label>
-                            <select class="form-select" id="tipo_atendimento_id" name="tipo_atendimento_id" required>
-                                <option value="">Selecione...</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="data_atendimento" class="form-label">Data</label>
-                            <input type="date" class="form-control" id="data_atendimento" name="data_atendimento" required>
-                        </div>
-
-                        <div class="col-md-6 mb-3">
-                            <label for="horario_atendimento" class="form-label">Horário</label>
-                            <input type="time" class="form-control" id="horario_atendimento" name="horario_atendimento" required>
-                        </div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="descricao" class="form-label">Descrição</label>
-                        <textarea class="form-control" id="descricao" name="descricao" rows="3" required></textarea>
-                    </div>
-
-                    <button type="submit" class="btn btn-primary">Salvar</button>
-                    <button type="button" class="btn btn-secondary" onclick="fecharFormulario()">Cancelar</button>
-                </form>
-            </div>
-        </div>
-
-        <div class="card shadow-sm" id="cardStatus" style="display: none;">
-            <div class="card-body">
-                <h2 class="h5 mb-3" id="tituloStatus">Alterar status</h2>
-
-                <form id="formStatus">
-                    <input type="hidden" id="atendimentoId" name="id" value="">
-                    <input type="hidden" id="novoStatus" name="status" value="">
-
-                    <div class="mb-3">
-                        <label for="observacao_final" class="form-label">Observação final</label>
-                        <textarea class="form-control" id="observacao_final" name="observacao_final" rows="2"></textarea>
-                    </div>
-
-                    <button type="submit" class="btn btn-primary">Confirmar</button>
-                    <button type="button" class="btn btn-secondary" onclick="fecharStatus()">Cancelar</button>
-                </form>
-            </div>
-        </div>
-
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+    <div>
+        <h1 class="h3 mb-1">Atendimentos</h1>
+        <p class="text-secondary mb-0">
+            Registro e acompanhamento dos atendimentos acadêmicos.
+        </p>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="<?= $baseUrl ?>assets/js/atend.js"></script>
+    <button class="btn btn-success" type="button" onclick="novoAtendimento()">
+        Novo atendimento
+    </button>
+</div>
 
-    <script>
-        const formAtendimento = document.getElementById('formAtendimento');
-        const formStatus = document.getElementById('formStatus');
+<div id="alerta"></div>
 
-        async function carregarOpcoes() {
-            try {
-                const response = await AtendeLabApi.get('atendimentos', 'opcoesFormulario');
+<div class="card border-0 shadow-sm mb-4 d-none" id="cardFormulario">
+    <div class="card-body">
+        <h2 class="h5">Novo atendimento</h2>
 
-                const selectPessoa = document.getElementById('pessoa_id');
-                response.pessoas.forEach(p => {
-                    const option = document.createElement('option');
-                    option.value = p.id;
-                    option.textContent = `${p.nome} (${p.documento})`;
-                    selectPessoa.appendChild(option);
-                });
+        <form id="formAtendimento">
+            <div class="row g-3">
 
-                const selectTipo = document.getElementById('tipo_atendimento_id');
-                response.tipos.forEach(t => {
-                    const option = document.createElement('option');
-                    option.value = t.id;
-                    option.textContent = t.nome;
-                    selectTipo.appendChild(option);
-                });
-            } catch (error) {
-                AtendeLabApi.showAlert('alerta', error.message, 'danger');
-            }
-        }
+                <div class="col-md-6">
+                    <label class="form-label">Pessoa *</label>
+                    <select
+                        class="form-select"
+                        name="pessoa_id"
+                        id="pessoaSelect"
+                        required>
+                    </select>
+                </div>
 
-        function badgeStatus(status) {
-            const classes = {
-                'aberto': 'text-bg-primary',
-                'em andamento': 'text-bg-warning',
-                'concluído': 'text-bg-success',
-            };
-            return classes[status] || 'text-bg-secondary';
-        }
+                <div class="col-md-6">
+                    <label class="form-label">Tipo *</label>
+                    <select
+                        class="form-select"
+                        name="tipo_atendimento_id"
+                        id="tipoSelect"
+                        required>
+                    </select>
+                </div>
 
-        async function carregarAtendimentos() {
-            try {
-                const dados = AtendeLabApi.toList(await AtendeLabApi.get('atendimentos', 'listar'));
-                const tbody = document.getElementById('tabelaAtendimentos');
-                if (!dados.length) {
-                    tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4">Nenhum atendimento cadastrado.</td></tr>';
-                    return;
-                }
-                tbody.innerHTML = dados.map(a => `<tr>
-                    <td>${AtendeLabApi.escape(a.pessoa_nome)}</td>
-                    <td>${AtendeLabApi.escape(a.tipo_atendimento_nome)}</td>
-                    <td>${AtendeLabApi.escape(a.data_atendimento)}</td>
-                    <td>${AtendeLabApi.escape(a.descricao)}</td>
-                    <td><span class="badge ${badgeStatus(a.status)}">${AtendeLabApi.escape(a.status)}</span></td>
-                    <td class="text-end">
-                        ${a.status === 'aberto' ? `<button class="btn btn-sm btn-outline-warning" onclick="abrirStatus(${Number(a.id)}, 'em andamento')">Em andamento</button>` : ''}
-                        ${a.status !== 'concluído' ? `<button class="btn btn-sm btn-outline-success" onclick="abrirStatus(${Number(a.id)}, 'concluído')">Concluir</button>` : ''}
+                <div class="col-md-4">
+                    <label class="form-label">Data *</label>
+                    <input
+                        class="form-control"
+                        type="date"
+                        name="data_atendimento"
+                        required>
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label">Horário *</label>
+                    <input
+                        class="form-control"
+                        type="time"
+                        name="horario_atendimento"
+                        required>
+                </div>
+
+                <div class="col-12">
+                    <label class="form-label">Descrição *</label>
+                    <textarea
+                        class="form-control"
+                        name="descricao"
+                        rows="3"
+                        required></textarea>
+                </div>
+
+            </div>
+
+            <div class="d-flex gap-2 mt-3">
+                <button class="btn btn-success" type="submit">
+                    Registrar
+                </button>
+
+                <button
+                    class="btn btn-outline-secondary"
+                    type="button"
+                    onclick="fecharFormulario()">
+                    Cancelar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>ID</th>
+                    <th>Pessoa</th>
+                    <th>Tipo</th>
+                    <th>Responsável</th>
+                    <th>Data</th>
+                    <th>Status</th>
+                    <th class="text-end">Ações</th>
+                </tr>
+            </thead>
+
+            <tbody id="tabelaAtendimentos">
+                <tr>
+                    <td colspan="7" class="text-center py-4">
+                        Carregando...
                     </td>
-                </tr>`).join('');
-            } catch (error) {
-                AtendeLabApi.showAlert('alerta', error.message, 'danger');
-            }
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="modal fade" id="modalStatus" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h2 class="modal-title fs-5">Alterar status</h2>
+
+                <button
+                    type="button"
+                    class="btn-close"
+                    data-bs-dismiss="modal">
+                </button>
+            </div>
+
+            <form id="formStatus">
+                <div class="modal-body">
+
+                    <input type="hidden" name="id" id="statusId">
+
+                    <div class="mb-3">
+                        <label class="form-label">Novo status</label>
+
+                        <select class="form-select" name="status" required>
+                            <option value="aberto">Aberto</option>
+                            <option value="em_andamento">Em andamento</option>
+                            <option value="concluido">Concluído</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="form-label">Observação final</label>
+
+                        <textarea
+                            class="form-control"
+                            name="observacao_final"
+                            rows="3"
+                            placeholder="Obrigatória ao concluir"></textarea>
+                    </div>
+
+                </div>
+
+                <div class="modal-footer">
+                    <button
+                        type="button"
+                        class="btn btn-outline-secondary"
+                        data-bs-dismiss="modal">
+                        Cancelar
+                    </button>
+
+                    <button class="btn btn-success" type="submit">
+                        Salvar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+const formAtendimento = document.getElementById('formAtendimento');
+const cardFormulario = document.getElementById('cardFormulario');
+
+const statusModal = () => {
+    return bootstrap.Modal.getOrCreateInstance(
+        document.getElementById('modalStatus')
+    );
+};
+
+function novoAtendimento() {
+    cardFormulario.classList.remove('d-none');
+
+    window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+    });
+}
+
+function fecharFormulario() {
+    cardFormulario.classList.add('d-none');
+    formAtendimento.reset();
+}
+
+function labelRegistro(obj, ...keys) {
+    for (const key of keys) {
+        if (obj[key] !== undefined && obj[key] !== null) {
+            return obj[key];
+        }
+    }
+
+    return '';
+}
+
+async function carregarCombos() {
+    const [pessoasResp, tiposResp] = await Promise.all([
+        AtendeLabApi.get('pessoas', 'listar'),
+        AtendeLabApi.get('tipos', 'listar')
+    ]);
+
+    const pessoas = AtendeLabApi
+        .toList(pessoasResp)
+        .filter(pessoa => pessoa.status !== 'inativo');
+
+    const tipos = AtendeLabApi
+        .toList(tiposResp)
+        .filter(tipo => tipo.status !== 'inativo');
+
+    document.getElementById('pessoaSelect').innerHTML =
+        '<option value="">Selecione</option>' +
+        pessoas.map(pessoa => `
+            <option value="${Number(pessoa.id)}">
+                ${AtendeLabApi.escape(pessoa.nome)}
+            </option>
+        `).join('');
+
+    document.getElementById('tipoSelect').innerHTML =
+        '<option value="">Selecione</option>' +
+        tipos.map(tipo => `
+            <option value="${Number(tipo.id)}">
+                ${AtendeLabApi.escape(tipo.nome)}
+            </option>
+        `).join('');
+}
+
+async function carregarAtendimentos() {
+    try {
+        const resposta = await AtendeLabApi.get('atendimentos', 'listar');
+        const atendimentos = AtendeLabApi.toList(resposta);
+        const tbody = document.getElementById('tabelaAtendimentos');
+
+        if (!atendimentos.length) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="7" class="text-center py-4">
+                        Nenhum atendimento registrado.
+                    </td>
+                </tr>
+            `;
+            return;
         }
 
-        function abrirFormularioNovo() {
-            formAtendimento.reset();
-            document.getElementById('cardFormulario').style.display = 'block';
-        }
+        tbody.innerHTML = atendimentos.map(atendimento => {
+            const pessoa = labelRegistro(
+                atendimento,
+                'pessoa',
+                'pessoa_nome',
+                'nome_pessoa'
+            );
 
-        function fecharFormulario() {
-            document.getElementById('cardFormulario').style.display = 'none';
-            formAtendimento.reset();
-        }
+            const tipo = labelRegistro(
+                atendimento,
+                'tipo',
+                'tipo_nome',
+                'tipo_atendimento',
+                'nome_tipo'
+            );
 
-        function abrirStatus(id, status) {
-            document.getElementById('atendimentoId').value = id;
-            document.getElementById('novoStatus').value = status;
-            document.getElementById('tituloStatus').textContent =
-                status === 'concluído' ? 'Concluir atendimento' : 'Marcar como em andamento';
-            document.getElementById('cardStatus').style.display = 'block';
-        }
+            const responsavel = labelRegistro(
+                atendimento,
+                'responsavel',
+                'usuario',
+                'usuario_nome',
+                'nome_usuario'
+            );
 
-        function fecharStatus() {
-            document.getElementById('cardStatus').style.display = 'none';
-            formStatus.reset();
-        }
+            const data = labelRegistro(
+                atendimento,
+                'data_atendimento',
+                'data'
+            );
 
-        formAtendimento.addEventListener('submit', async event => {
-            event.preventDefault();
-            try {
-                await AtendeLabApi.post('atendimentos', 'criar', new FormData(formAtendimento));
-                AtendeLabApi.showAlert('alerta', 'Atendimento cadastrado com sucesso.');
-                fecharFormulario();
-                await carregarAtendimentos();
-            } catch (error) {
-                AtendeLabApi.showAlert('alerta', error.message, 'danger');
-            }
-        });
+            const classeStatus =
+                atendimento.status === 'concluido'
+                    ? 'text-bg-success'
+                    : atendimento.status === 'em_andamento'
+                        ? 'text-bg-warning'
+                        : 'text-bg-primary';
 
-        formStatus.addEventListener('submit', async event => {
-            event.preventDefault();
-            try {
-                await AtendeLabApi.post('atendimentos', 'atualizarStatus', new FormData(formStatus));
-                AtendeLabApi.showAlert('alerta', 'Status atualizado com sucesso.');
-                fecharStatus();
-                await carregarAtendimentos();
-            } catch (error) {
-                AtendeLabApi.showAlert('alerta', error.message, 'danger');
-            }
-        });
+            return `
+                <tr>
+                    <td>${AtendeLabApi.escape(atendimento.id)}</td>
+                    <td>${AtendeLabApi.escape(pessoa)}</td>
+                    <td>${AtendeLabApi.escape(tipo)}</td>
+                    <td>${AtendeLabApi.escape(responsavel)}</td>
+                    <td>${AtendeLabApi.escape(data)}</td>
 
-        carregarOpcoes();
-        carregarAtendimentos();
-    </script>
+                    <td>
+                        <span class="badge ${classeStatus}">
+                            ${AtendeLabApi.escape(atendimento.status)}
+                        </span>
+                    </td>
 
-</body>
-</html>
+                    <td class="text-end">
+                        <button
+                            class="btn btn-sm btn-outline-primary"
+                            onclick="abrirStatus(
+                                ${Number(atendimento.id)},
+                                '${AtendeLabApi.escapeAttr(atendimento.status)}'
+                            )">
+                            Status
+                        </button>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+
+    } catch (error) {
+        AtendeLabApi.showAlert('alerta', error.message, 'danger');
+    }
+}
+
+formAtendimento.addEventListener('submit', async event => {
+    event.preventDefault();
+
+    try {
+        await AtendeLabApi.post(
+            'atendimentos',
+            'criar',
+            new FormData(formAtendimento)
+        );
+
+        AtendeLabApi.showAlert(
+            'alerta',
+            'Atendimento registrado com sucesso.'
+        );
+
+        fecharFormulario();
+        await carregarAtendimentos();
+
+    } catch (error) {
+        AtendeLabApi.showAlert('alerta', error.message, 'danger');
+    }
+});
+
+function abrirStatus(id, status) {
+    document.getElementById('statusId').value = id;
+
+    document.querySelector('#formStatus [name="status"]').value =
+        status || 'aberto';
+
+    document.querySelector('#formStatus [name="observacao_final"]').value = '';
+
+    statusModal().show();
+}
+
+document.getElementById('formStatus').addEventListener('submit', async event => {
+    event.preventDefault();
+
+    try {
+        await AtendeLabApi.post(
+            'atendimentos',
+            'alterarStatus',
+            new FormData(event.target)
+        );
+
+        statusModal().hide();
+
+        AtendeLabApi.showAlert(
+            'alerta',
+            'Status atualizado com sucesso.'
+        );
+
+        await carregarAtendimentos();
+
+    } catch (error) {
+        AtendeLabApi.showAlert('alerta', error.message, 'danger');
+    }
+});
+
+document.addEventListener('DOMContentLoaded', async () => {
+    try {
+        await carregarCombos();
+        await carregarAtendimentos();
+
+    } catch (error) {
+        AtendeLabApi.showAlert('alerta', error.message, 'danger');
+    }
+});
+</script>
+
+<?php require __DIR__ . '/../layouts/footer.php'; ?>
