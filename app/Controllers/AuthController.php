@@ -24,7 +24,7 @@ class AuthController
     {
         //Se o usuário já estiver logado, recireociona para as próximas estapas.
         if (usuarioAutenticado()) {
-            header('Location: ?controller=auth&action=dashbord');
+            header('Location: ?controller=auth&action=dashboard');
             exit;
         }
 

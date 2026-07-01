@@ -37,14 +37,14 @@ class AtendimentosController
     {
         header('Content-Type: application/json; charset=utf-8');
 
-        $usuario_id = filter_input(INPUT_POST, 'usuario_id', FILTER_VALIDATE_INT);
+        $usuario_id = $this->usuarioResponsavel();
         $pessoa_id = filter_input(INPUT_POST, 'pessoa_id', FILTER_VALIDATE_INT);
         $tipo_atendimento_id = filter_input(INPUT_POST, 'tipo_atendimento_id', FILTER_VALIDATE_INT);
         $descricao = trim($_POST['descricao'] ?? '');
         $data_atendimento = $_POST['data_atendimento'] ?? date('Y-m-d');
         $horario_atendimento = $_POST['horario_atendimento'] ?? date('H:i:s');
 
-        if (!$usuario_id || !$pessoa_id || !$tipo_atendimento_id || $descricao === '') {
+        if (!$pessoa_id || !$tipo_atendimento_id || $descricao === '') {
             http_response_code(400);
             echo json_encode(['erro' => 'usuario_id, pessoa_id, tipo_atendimento_id e descricao são obrigatórios.']);
             return;
@@ -173,6 +173,56 @@ class AtendimentosController
         }
 
         echo json_encode($atendimento, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+    }
+
+    public function opcoesFormulario(): void
+    {
+        header('Content-Type: application/json; charset=utf-8');
+
+        $sqlPessoas = 'SELECT id, nome, documento
+                        FROM pessoas
+                        WHERE status = :status
+                        ORDER BY nome';
+        $stmtPessoas = $this->pdo->prepare($sqlPessoas);
+        $stmtPessoas->bindValue(':status', 'ativo');
+        $stmtPessoas->execute();
+        $pessoas = $stmtPessoas->fetchAll(PDO::FETCH_ASSOC);
+
+        $sqlTipos = 'SELECT id, nome
+                        FROM tipos_atendimentos
+                        WHERE status = :status
+                        ORDER BY nome';
+        $stmtTipos = $this->pdo->prepare($sqlTipos);
+        $stmtTipos->bindValue(':status', 'ativo');
+        $stmtTipos->execute();
+        $tipos = $stmtTipos->fetchAll(PDO::FETCH_ASSOC);
+
+        echo json_encode([
+            'pessoas' => $pessoas,
+            'tipos' => $tipos,
+        ], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+    }
+
+    private function inteiroObrigatorio($valor, string $campo): int
+    {
+        $inteiro = filter_var($valor, FILTER_VALIDATE_INT);
+
+        if ($inteiro === false) {
+            http_response_code(400);
+            echo json_encode(['erro' => "O campo {$campo} é obrigatório e deve ser um número inteiro."]);
+            exit;
+        }
+
+        return $inteiro;
+    }
+
+    private function usuarioResponsavel(): int
+    {
+        if (isset($_SESSION['usuario']['id'])) {
+            return (int) $_SESSION['usuario']['id'];
+        }
+
+        return $this->inteiroObrigatorio($_POST['usuario_id'] ?? null, 'usuario_id');
     }
 }
 

@@ -107,63 +107,57 @@ switch ($controller) {
  
     case 'tipos':
         exigirAutenticacao();
-        $tiposAtendimentosController = new TiposAtendimentosController();
- 
+        require_once __DIR__ . '/app/Controllers/TiposAtendimentosController.php';
+        $tiposController = new TiposAtendimentosController();
+
         switch ($action) {
             case 'listar':
-                $tiposAtendimentosController->listar();
+                $tiposController->listar();
                 break;
- 
+            case 'buscar':
             case 'buscarPorId':
-                $tiposAtendimentosController->buscarPorId();
+                $tiposController->buscarPorId();
                 break;
- 
             case 'criar':
-                $tiposAtendimentosController->criar();
+                $tiposController->criar();
                 break;
- 
             case 'atualizar':
-                $tiposAtendimentosController->atualizar();
+                $tiposController->atualizar();
                 break;
- 
-            case 'excluir':
-                $tiposAtendimentosController->excluir();
-                break;
-
             case 'inativar':
-                $tiposAtendimentosController->inativar();
+                $tiposController->inativar();
                 break;
- 
             default:
-                http_response_code(404);
-                echo 'Acao de tipos de atendimentos nao encontrada.';
+                responderRotaNaoEncontrada('Ação de tipos de atendimento não encontrada.');
         }
         break;
  
     case 'atendimentos':
         exigirAutenticacao();
+        require_once __DIR__
+            . '/app/Controllers/AtendimentosController.php';
         $atendimentosController = new AtendimentosController();
- 
         switch ($action) {
             case 'listar':
                 $atendimentosController->listar();
                 break;
- 
-            case 'buscarPorId':
+            case 'visualizar':
                 $atendimentosController->visualizar();
                 break;
- 
             case 'criar':
                 $atendimentosController->criar();
                 break;
- 
+            case 'alterarStatus':
             case 'atualizarStatus':
                 $atendimentosController->atualizarStatus();
                 break;
- 
+            case 'opcoesFormulario':
+                $atendimentosController->opcoesFormulario();
+                break;
             default:
-                http_response_code(404);
-                echo 'Acao de atendimentos nao encontrada.';
+                responderRotaNaoEncontrada(
+                    'Ação de atendimentos não encontrada.'
+                );
         }
         break;
  
@@ -208,11 +202,33 @@ switch ($controller) {
                 echo 'Acao de relatorios nao encontrada.';
         }
         break;
- 
+
+        case 'frontend':
+            exigirAutenticacao();
+
+            switch ($action) {
+                case 'pessoas':
+                    require __DIR__ . '/app/Views/pessoas/index.php';
+                    break;
+
+                case 'tipos':
+                    require __DIR__ . '/app/Views/tipos-atendimentos/index.php';
+                    break;
+
+                case 'atendimentos':
+                    require __DIR__ . '/app/Views/atendimentos/index.php';
+                    break;
+
+                default:
+                    http_response_code(404);
+                    echo 'Acao de frontend nao encontrada.';
+            }
+            break;
+
     default:
         http_response_code(404);
         echo 'Controller nao encontrado.';
-}
+    }
  
 ?>
 

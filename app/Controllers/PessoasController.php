@@ -28,7 +28,9 @@ class PessoasController
     {
         header('Content-Type: application/json; charset=utf-8');
 
-        $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
+        $idRaw = $_GET['id'] ?? '';
+        $id = is_string($idRaw) ? trim($idRaw) : $idRaw;
+        $id = filter_var($id, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
 
         if (!$id) {
             http_response_code(400);
@@ -147,7 +149,9 @@ class PessoasController
     {
         header('Content-Type: application/json; charset=utf-8');
 
-        $id = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
+        $idRaw = $_POST['id'] ?? '';
+        $id = is_string($idRaw) ? trim($idRaw) : $idRaw;
+        $id = filter_var($id, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
         $nome = trim($_POST['nome'] ?? '');
         $documento = trim($_POST['documento'] ?? '');
         $email = trim($_POST['email'] ?? '');
@@ -206,6 +210,17 @@ class PessoasController
                 return;
             }
 
+            $checkIdSql = 'SELECT id FROM pessoas WHERE id = :id LIMIT 1';
+            $checkIdStmt = $this->pdo->prepare($checkIdSql);
+            $checkIdStmt->bindValue(':id', $id, PDO::PARAM_INT);
+            $checkIdStmt->execute();
+
+            if (!$checkIdStmt->fetch(PDO::FETCH_ASSOC)) {
+                http_response_code(404);
+                echo json_encode(['erro' => 'Pessoa não encontrada.']);
+                return;
+            }
+
             $sql = 'UPDATE pessoas
                     SET nome = :nome,
                         documento = :documento,
@@ -228,12 +243,6 @@ class PessoasController
             $stmt->bindValue(':status', $status);
             $stmt->bindValue(':id', $id, PDO::PARAM_INT);
             $stmt->execute();
-
-            if ($stmt->rowCount() === 0) {
-                http_response_code(404);
-                echo json_encode(['erro' => 'Pessoa não encontrada.']);
-                return;
-            }
 
             echo json_encode(['mensagem' => 'Pessoa atualizada com sucesso.'], JSON_UNESCAPED_UNICODE);
         } catch (PDOException $e) {
