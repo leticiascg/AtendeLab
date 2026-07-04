@@ -1,5 +1,7 @@
 <?php
 
+require_once __DIR__ . '/../Middleware/auth.php';
+
 class AtendimentosController
 {
     private PDO $pdo;
@@ -65,16 +67,15 @@ class AtendimentosController
 
     public function criar(): void
     {
+        $usuarioAtual = usuarioAtual();
+        $usuarioId = $usuarioAtual['id'] ?? null;
+
         $pessoaId = filter_var(
             $_POST['pessoa_id'] ?? null,
             FILTER_VALIDATE_INT
         );
         $tipoId = filter_var(
             $_POST['tipo_atendimento_id'] ?? null,
-            FILTER_VALIDATE_INT
-        );
-        $usuarioId = filter_var(
-            $_POST['usuario_id'] ?? null,
             FILTER_VALIDATE_INT
         );
         $descricao = trim($_POST['descricao'] ?? '');
