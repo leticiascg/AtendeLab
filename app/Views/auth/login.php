@@ -31,10 +31,10 @@ require_once __DIR__ . '/../layouts/config-view.php';
                         ) ?>
                     </div>
                 <?php endif; ?>
-                <?php if (!empty($erroLogin)): ?>
+                <?php if (!empty($erro_Login)): ?>
                     <div class="alert alert-danger">
                         <?= htmlspecialchars(
-                            (string) $erroLogin,
+                            (string) $erro_Login,
                             ENT_QUOTES,
                             'UTF-8'
                         ) ?>

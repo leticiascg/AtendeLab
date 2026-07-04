@@ -1,235 +1,119 @@
-<?php require_once __DIR__ . '/../layouts/config-view.php'; ?>
-<!doctype html>
-<html lang="pt-br">
-
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-
-    <title>Pessoas - AtendeLab</title>
-
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-
-<body class="bg-light">
-
-    <nav class="navbar navbar-dark bg-dark">
-        <div class="container">
-            <span class="navbar-brand">AtendeLab</span>
-
-            <div>
-                <a class="btn btn-outline-light btn-sm" href="<?= $baseUrl ?>?controller=auth&action=dashboard">
-                    Dashboard
-                </a>
-                <a class="btn btn-outline-light btn-sm" href="<?= $baseUrl ?>?controller=auth&action=logout">
-                    Sair
-                </a>
-            </div>
-        </div>
-    </nav>
-
-    <div class="container mt-4">
-
-        <div id="alerta"></div>
-
-        <div class="card shadow-sm mb-4">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h1 class="h4 mb-0">Pessoas</h1>
-                    <button class="btn btn-success" onclick="abrirFormularioNovo()">
-                        Nova pessoa
-                    </button>
-                </div>
-
-                <div class="table-responsive">
-                    <table class="table table-striped align-middle">
-                        <thead>
-                            <tr>
-                                <th>Nome</th>
-                                <th>Documento</th>
-                                <th>E-mail</th>
-                                <th>Curso</th>
-                                <th>Período</th>
-                                <th>Status</th>
-                                <th class="text-end">Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tabelaPessoas">
-                            <tr>
-                                <td colspan="7" class="text-center py-4">Carregando...</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
-        <div class="card shadow-sm" id="cardFormulario" style="display: none;">
-            <div class="card-body">
-                <h2 class="h5 mb-3" id="tituloFormulario">Nova pessoa</h2>
-
-                <form id="formPessoa">
-                    <input type="hidden" id="pessoaId" name="id" value="">
-
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="nome" class="form-label">Nome</label>
-                            <input type="text" class="form-control" id="nome" name="nome" required>
-                        </div>
-
-                        <div class="col-md-6 mb-3">
-                            <label for="documento" class="form-label">Documento</label>
-                            <input type="text" class="form-control" id="documento" name="documento" required>
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="email" class="form-label">E-mail</label>
-                            <input type="email" class="form-control" id="email" name="email" required>
-                        </div>
-
-                        <div class="col-md-6 mb-3">
-                            <label for="telefone" class="form-label">Telefone</label>
-                            <input type="text" class="form-control" id="telefone" name="telefone">
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="curso" class="form-label">Curso</label>
-                            <input type="text" class="form-control" id="curso" name="curso">
-                        </div>
-
-                        <div class="col-md-6 mb-3">
-                            <label for="periodo" class="form-label">Período</label>
-                            <input type="text" class="form-control" id="periodo" name="periodo">
-                        </div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="observacoes" class="form-label">Observações</label>
-                        <textarea class="form-control" id="observacoes" name="observacoes" rows="2"></textarea>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="status" class="form-label">Status</label>
-                        <select class="form-select" id="status" name="status">
-                            <option value="ativo">Ativo</option>
-                            <option value="inativo">Inativo</option>
-                        </select>
-                    </div>
-
-                    <button type="submit" class="btn btn-primary">Salvar</button>
-                    <button type="button" class="btn btn-secondary" onclick="fecharFormulario()">Cancelar</button>
-                </form>
-            </div>
-        </div>
-
+<?php
+$tituloPagina = 'Pessoas atendidas';
+require __DIR__ . '/../layouts/header.php';
+?>
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+    <div>
+        <h1 class="h3 mb-1">Pessoas atendidas</h1>
+        <p class="text-secondary mb-0">Cadastro, edição e inativação sem excluir o histórico.</p>
     </div>
+    <button class="btn btn-success" type="button" onclick="novaPessoa()">Nova pessoa</button>
+</div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="<?= $baseUrl ?>assets/js/api.js"></script>
+<div id="alerta"></div>
 
-    <script>
-        const formPessoa = document.getElementById('formPessoa');
+<div class="card border-0 shadow-sm mb-4 d-none" id="cardFormulario">
+    <div class="card-body">
+        <h2 class="h5" id="tituloFormulario">Nova pessoa</h2>
+        <form id="formPessoa">
+            <input type="hidden" name="id" id="pessoaId">
+            <div class="row g-3">
+                <div class="col-md-6"><label class="form-label">Nome *</label><input class="form-control" name="nome" required></div>
+                <div class="col-md-3"><label class="form-label">Documento *</label><input class="form-control" name="documento" required></div>
+                <div class="col-md-3"><label class="form-label">Telefone</label><input class="form-control" name="telefone"></div>
+                <div class="col-md-6"><label class="form-label">E-mail *</label><input class="form-control" type="email" name="email" required></div>
+                <div class="col-md-3"><label class="form-label">Curso</label><input class="form-control" name="curso"></div>
+                <div class="col-md-3"><label class="form-label">Período</label><input class="form-control" name="periodo"></div>
+                <div class="col-12"><label class="form-label">Observações</label><textarea class="form-control" name="observacoes" rows="2"></textarea></div>
+                <div class="col-md-3"><label class="form-label">Status</label><select class="form-select" name="status">
+                    <option value="ativo">Ativo</option>
+                    <option value="inativo">Inativo</option>
+                </select></div>
+            </div>
+            <div class="d-flex gap-2 mt-3">
+                <button class="btn btn-success" type="submit">Salvar</button>
+                <button class="btn btn-outline-secondary" type="button" onclick="fecharFormulario()">Cancelar</button>
+            </div>
+        </form>
+    </div>
+</div>
 
-        async function carregarPessoas() {
-            try {
-                const dados = AtendeLabApi.toList(await AtendeLabApi.get('pessoas', 'listar'));
-                const tbody = document.getElementById('tabelaPessoas');
-                if (!dados.length) {
-                    tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4">Nenhuma pessoa cadastrada.</td></tr>';
-                    return;
-                }
-                tbody.innerHTML = dados.map(p => `<tr>
-                    <td>${AtendeLabApi.escape(p.nome)}</td>
-                    <td>${AtendeLabApi.escape(p.documento)}</td>
-                    <td>${AtendeLabApi.escape(p.email)}</td>
-                    <td>${AtendeLabApi.escape(p.curso || '')}</td>
-                    <td>${AtendeLabApi.escape(p.periodo || '')}</td>
-                    <td><span class="badge ${p.status === 'ativo' ? 'text-bg-success' : 'text-bg-secondary'}">${AtendeLabApi.escape(p.status)}</span></td>
-                    <td class="text-end">
-                        <button class="btn btn-sm btn-outline-primary" onclick="editarPessoa(${Number(p.id)})">Editar</button>
-                        <button class="btn btn-sm btn-outline-danger" onclick="inativarPessoa(${Number(p.id)})">Inativar</button>
-                    </td>
-                </tr>`).join('');
-            } catch (error) {
-                AtendeLabApi.showAlert('alerta', error.message, 'danger');
+<div class="card border-0 shadow-sm">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Nome</th>
+                    <th>Documento</th>
+                    <th>E-mail</th>
+                    <th>Curso</th>
+                    <th>Período</th>
+                    <th>Status</th>
+                    <th class="text-end">Ações</th>
+                </tr>
+            </thead>
+            <tbody id="tabelaPessoas">
+                <tr>
+                    <td colspan="7" class="text-center py-4">Carregando...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    const formPessoa = document.getElementById('formPessoa');
+    const cardFormulario = document.getElementById('cardFormulario');
+
+    function abrirFormulario() { cardFormulario.classList.remove('d-none'); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+    function fecharFormulario() { cardFormulario.classList.add('d-none'); formPessoa.reset(); document.getElementById('pessoaId').value = ''; }
+    function novaPessoa() { fecharFormulario(); document.getElementById('tituloFormulario').textContent = 'Nova pessoa'; abrirFormulario(); }
+
+    async function carregarPessoas() {
+        try {
+            const dados = await AtendeLabApi.toList(await AtendeLabApi.get('pessoas', 'listar'));
+            const tbody = document.getElementById('tabelaPessoas');
+            if (!dados.length) { tbody.innerHTML = `<tr><td colspan="7" class="text-center py-4">Nenhuma pessoa cadastrada.</td></tr>`; return; }
+            tbody.innerHTML = dados.map(p => `<tr>
+                <td>${AtendeLabApi.escape(p.nome)}</td>
+                <td>${AtendeLabApi.escape(p.documento)}</td>
+                <td>${AtendeLabApi.escape(p.email)}</td>
+                <td>${AtendeLabApi.escape(p.curso || '')}</td>
+                <td>${AtendeLabApi.escape(p.periodo || '')}</td>
+                <td><span class="badge ${p.status === 'ativo' ? 'text-bg-success' : 'text-bg-secondary'}">${AtendeLabApi.escape(p.status)}</span></td>
+                <td class="text-end"><button class="btn btn-sm btn-outline-primary" onclick="editarPessoa(${Number(p.id)})">Editar</button> <button class="btn btn-sm btn-outline-danger" onclick="inativarPessoa(${Number(p.id)})">Inativar</button></td>
+            </tr>`).join('');
+        } catch (error) { AtendeLabApi.showAlert('alerta', error.message, 'danger'); }
+    }
+
+    async function editarPessoa(id) {
+        try {
+            const p = AtendeLabApi.toObject(await AtendeLabApi.get('pessoas', 'buscar', { id }));
+            novaPessoa();
+            document.getElementById('tituloFormulario').textContent = 'Editar pessoa';
+            for (const [key, value] of Object.entries(p)) {
+                const field = formPessoa.elements.namedItem(key);
+                if (field) field.value = value ?? '';
             }
-        }
+        } catch (error) { AtendeLabApi.showAlert('alerta', error.message, 'danger'); }
+    }
 
-        function abrirFormularioNovo() {
-            formPessoa.reset();
-            document.getElementById('pessoaId').value = '';
-            document.getElementById('tituloFormulario').textContent = 'Nova pessoa';
-            document.getElementById('cardFormulario').style.display = 'block';
-        }
+    formPessoa.addEventListener('submit', async event => {
+        event.preventDefault();
+        const id = document.getElementById('pessoaId').value;
+        try {
+            await AtendeLabApi.post('pessoas', id ? 'atualizar' : 'criar', new FormData(formPessoa));
+            AtendeLabApi.showAlert('alerta', id ? 'Pessoa atualizada com sucesso.' : 'Pessoa cadastrada com sucesso.');
+            fecharFormulario(); await carregarPessoas();
+        } catch (error) { AtendeLabApi.showAlert('alerta', error.message, 'danger'); }
+    });
 
-        function validarId(id) {
-            const parsedId = Number(id);
-            if (!Number.isInteger(parsedId) || parsedId <= 0) {
-                throw new Error('ID inválido no frontend.');
-            }
-            return parsedId;
-        }
+    async function inativarPessoa(id) {
+        if (!confirm('Deseja inativar esta pessoa?')) return;
+        try { await AtendeLabApi.post('pessoas', 'inativar', { id }); AtendeLabApi.showAlert('alerta', 'Pessoa inativada com sucesso.'); await carregarPessoas(); }
+        catch (error) { AtendeLabApi.showAlert('alerta', error.message, 'danger'); }
+    }
 
-        async function editarPessoa(id) {
-            try {
-                const parsedId = validarId(id);
-                const response = await AtendeLabApi.get('pessoas', 'buscarPorId', { query: { id: parsedId } });
-                const pessoa = AtendeLabApi.toObject(response);
-
-                document.getElementById('pessoaId').value = pessoa.id ?? '';
-                document.getElementById('nome').value = pessoa.nome ?? '';
-                document.getElementById('documento').value = pessoa.documento ?? '';
-                document.getElementById('email').value = pessoa.email ?? '';
-                document.getElementById('telefone').value = pessoa.telefone ?? '';
-                document.getElementById('curso').value = pessoa.curso ?? '';
-                document.getElementById('periodo').value = pessoa.periodo ?? '';
-                document.getElementById('observacoes').value = pessoa.observacoes ?? '';
-                document.getElementById('status').value = pessoa.status ?? 'ativo';
-
-                document.getElementById('tituloFormulario').textContent = 'Editar pessoa';
-                document.getElementById('cardFormulario').style.display = 'block';
-            } catch (error) {
-                AtendeLabApi.showAlert('alerta', error.message, 'danger');
-            }
-        }
-
-        async function inativarPessoa(id) {
-            if (!confirm('Deseja realmente inativar esta pessoa?')) return;
-
-            try {
-                const parsedId = validarId(id);
-                await AtendeLabApi.post('pessoas', 'inativar', { id: parsedId });
-                AtendeLabApi.showAlert('alerta', 'Pessoa inativada com sucesso.');
-                await carregarPessoas();
-            } catch (error) {
-                AtendeLabApi.showAlert('alerta', error.message, 'danger');
-            }
-        }
-
-        function fecharFormulario() {
-            document.getElementById('cardFormulario').style.display = 'none';
-            formPessoa.reset();
-        }
-
-        formPessoa.addEventListener('submit', async event => {
-            event.preventDefault();
-            const id = document.getElementById('pessoaId').value;
-            try {
-                await AtendeLabApi.post('pessoas', id ? 'atualizar' : 'criar', new FormData(formPessoa));
-                AtendeLabApi.showAlert('alerta', id ? 'Pessoa atualizada com sucesso.' : 'Pessoa cadastrada com sucesso.');
-                fecharFormulario();
-                await carregarPessoas();
-            } catch (error) {
-                AtendeLabApi.showAlert('alerta', error.message, 'danger');
-            }
-        });
-
-        carregarPessoas();
-    </script>
-
-</body>
-</html>
+    document.addEventListener('DOMContentLoaded', carregarPessoas);
+</script>
+<?php require __DIR__ . '/../layouts/footer.php'; ?>
